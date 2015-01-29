@@ -171,6 +171,15 @@
 
             // Foreach leg in legs
             angular.forEach(itinerary.legs, function (leg) {
+                _.each(leg.steps, function (step) {
+                    console.log(step);
+                    var stepPoints = L.PolylineUtil.decode(step.stepGeometry.points);
+                    var invertedPoints = _.map(stepPoints, function(pt) {
+                        return MapControl.pointToLngLat(pt);
+                    });
+                    lineStrings.push(turf.lineString(invertedPoints, propertiesFromStep(step)));
+                });
+                /*
                 // get steps as points
                 var steps = _.map(leg.steps, function (step) {
                     return stepToPoint(step);
@@ -203,6 +212,7 @@
                     }
                     stepLinePoints.push(lngLatPoint);
                 }
+                */
             });
             return turf.featurecollection(lineStrings);
 
