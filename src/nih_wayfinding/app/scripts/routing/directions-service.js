@@ -169,66 +169,31 @@
             var itinerary = itineraries[0];
             var lineStrings = [];
 
-            // Foreach leg in legs
             angular.forEach(itinerary.legs, function (leg) {
                 _.each(leg.steps, function (step) {
-                    console.log(step);
                     var stepPoints = L.PolylineUtil.decode(step.stepGeometry.points);
                     var invertedPoints = _.map(stepPoints, function(pt) {
-                        return MapControl.pointToLngLat(pt);
+                        return [pt[1], [pt[0]]];
                     });
-                    lineStrings.push(turf.lineString(invertedPoints, propertiesFromStep(step)));
+                    var lineString = turf.linestring(invertedPoints, propertiesFromStep(step));
+                    lineStrings.push(lineString);
                 });
-                /*
-                // get steps as points
-                var steps = _.map(leg.steps, function (step) {
-                    return stepToPoint(step);
-                });
-                var numSteps = steps.length;
-
-                // Get legGeometry as feature collection of points
-                var legPoints = L.PolylineUtil.decode(leg.legGeometry.points);
-                var stepCollection = turf.featurecollection(_.map(legPoints, function (point) {
-                    return turf.point([point[1], point[0]]);
-                }));
-
-                // Loop each of the legGeometry points, and add them to the previous step until we hit
-                //      a legGeometry point that is nearest to the next step. At that point, save off
-                //      the existing line points to the first step LineString and attach properties to it.
-                var currentStep = 1;
-                var stepLinePoints = [MapControl.pointToLngLat(stepCollection.features[0])];
-                var numFeatures = stepCollection.features.length;
-                for (var i = 0; i < numFeatures; i++) {
-                    var feature = stepCollection.features[i];
-                    var lngLatPoint = MapControl.pointToLngLat(feature);
-                    if (currentStep < numSteps && feature === turf.nearest(steps[currentStep], stepCollection) ||
-                        i === numFeatures - 1) {
-                        var lastStepPoint = steps[currentStep - 1];
-                        var lastStepProperties = propertiesFromStep(lastStepPoint);
-                        stepLinePoints.push(lngLatPoint);
-                        lineStrings.push(turf.linestring(stepLinePoints, lastStepProperties));
-                        stepLinePoints = [];
-                        currentStep++;
-                    }
-                    stepLinePoints.push(lngLatPoint);
-                }
-                */
             });
             return turf.featurecollection(lineStrings);
 
             /**
-             * Transform OTP step object properties to NIH LineString properties
+             * Transform OTP step object to NIH LineString properties
              * @param  {object} step OTP step object
              * @return {object}     NIH properties object
              */
             function propertiesFromStep(step) {
-                var distance = step.properties.distance;
-                var lastModified = (step.properties.lastAudited || 0) / 1000;
-                var turn = step.properties.relativeDirection;
-                var direction = step.properties.absoluteDirection;
-                var street = step.properties.streetName;
+                var distance = step.distance;
+                var lastModified = (step.lastAudited || 0) / 1000;
+                var turn = step.relativeDirection;
+                var direction = step.absoluteDirection;
+                var street = step.streetName;
                 var text = turnText(turn, street, direction);
-                var flags = angular.extend({}, step.properties);
+                var flags = angular.extend({}, step);
                 var keys = ['distance', 'relativeDirection', 'absoluteDirection',
                             'streetName', 'lon', 'lat'];
                 angular.forEach(keys, function (key) {
